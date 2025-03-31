@@ -1,5 +1,16 @@
 const mongoose = require('mongoose');
 
+const commentSchema = new mongoose.Schema({
+    text: {
+        type: String,
+        required: true,
+    },
+    author: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+    }
+}, {timestamps: true});
+
 const hootSchema = new mongoose.Schema({
     title: {
         type: String,
@@ -18,7 +29,8 @@ const hootSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId, 
         ref: 'User', //ref propperty allows us to use .populate
     },
-    
+    comments: [commentSchema],//embedded comment Schema
+
 }, {timestamps: true});
 
 const Hoot = mongoose.model('Hoot', hootSchema);
