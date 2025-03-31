@@ -36,7 +36,7 @@ router.get('/', verifyToken, async (req, res) => {
 router.get('/:hootId', verifyToken, async (req, res) => {
     try {
         const hoot = await Hoot.findById(req.params.hootId)
-        .populate('author');
+        .populate(['author', 'comments.author']);
         res.status(200).json(hoot);
     } catch (error) {
         console.log(error);
@@ -84,6 +84,27 @@ router.delete('/:hootId', verifyToken, async (req, res) => {
     } catch (error) {
         console.log(error);
         res.status(500).json({error: error.message});
+    }
+});
+
+//Comment Routes
+
+//POST /hoots/:hootId/comments CREATE Route 'Protected'
+router.post('/:hootId/comments', verifyToken, async (req, res) => {
+    try {
+        req.body.author = req.user._id; //add requesting user as author
+        const hoot = await Hoot.findById(req.params.hootId);
+        hoot.comments.push(req.body);
+        await hoot.save();
+
+        //Find the newly created comment
+        const newComment = hoot.comments[hoot.comments.length - 1]; //get most recent comment
+        newComment._doc.author = req.user; //add requesting user's details
+        res.status(201).json(newComment);
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({error: error.mesage});
+        
     }
 });
 
