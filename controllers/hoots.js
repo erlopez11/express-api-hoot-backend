@@ -89,7 +89,7 @@ router.delete('/:hootId', verifyToken, async (req, res) => {
 
 //Comment Routes
 
-//POST /hoots/:hootId/comments CREATE Route 'Protected'
+//POST /hoots/:hootId/comments - CREATE Route 'Protected'
 router.post('/:hootId/comments', verifyToken, async (req, res) => {
     try {
         req.body.author = req.user._id; //add requesting user as author
@@ -105,6 +105,44 @@ router.post('/:hootId/comments', verifyToken, async (req, res) => {
         console.log(error);
         res.status(500).json({error: error.mesage});
         
+    }
+});
+
+//PUT /hoots/:hootId/comments/:commentId UPDATE Route 'Protected'
+router.put('/:hootId/comments/:commentId', verifyToken, async (req,res) => {
+    try {
+        const hoot = await Hoot.findById(req.params.hootId);
+        const comment = hoot.comments.id(req.params.commentId);
+    
+        //ensure current user is author of comment
+        if(comment.author.toString() !== req.user._id) {
+            return res.status(403).json({message: 'You\'re not authorized to edit this comment!'});
+        }
+    
+        comment.text = req.body.text;
+        await hoot.save();
+        res.status(200).json({message: 'Comment updated successfully!'});
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({error: error.message});
+    }
+});
+
+//DELETE /hoots/:hootId/comments/:commentId - DELETE Route 'Protected'
+router.delete('/:hootId/comments/:commentId', verifyToken, async (req,res) => {
+    try {
+        const hoot = await Hoot.findById(req.params.hootId);
+        const comment = hoot.comments.id(req.params.commentId);
+    
+        if (comment.author.toString() !== req.user._id) {
+            return res.status(403).json({message: 'You\'re not authorized to delete this comment!'});
+        }
+        hoot.comments.remove({_id: req.params.commentId});
+        await hoot.save();
+        res.status(200).json({message: 'Comment deleted successfully!'});
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({error: error.message});
     }
 });
 
